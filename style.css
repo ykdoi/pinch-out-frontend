@@ -15,3 +15,8 @@ td {
 form {
   display: inline-block;
 }
+
+
+#home {
+  margin: 10px;
+}
