@@ -6,6 +6,7 @@
     <script src="https://www.gstatic.com/firebasejs/4.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/4.10.1/firebase-auth.js"></script>
     <script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script> 
     <link
       type="text/css"
       rel="stylesheet"
@@ -76,35 +77,35 @@
             response.data.forEach(element => {
               console.log("element", element);
               var row = table.insertRow(-1);
-              var tweetTime = row.insertCell(-1);
+              // 【追加】
+              var tweetDate = row.insertCell(-1);
               var tweetUser = row.insertCell(-1);
+              //
               var tweetBody = row.insertCell(-1);
-              var likeCount = row.insertCell(-1);
-              //tmpTweetTimeに一旦格納する。
-              let tmpTweetTime = element.tweetTime;
-              //格納した値から"yyyy/MM/dd hh:mm:ss"形式に変換
-              let convertedTweetTime = tmpTweetTime.substr(0,4) + '/' + tmpTweetTime.substr(5,2) + '/' + tmpTweetTime.substr(8,2) + ' ' + tmpTweetTime.substr(11,8);
-              console.log(element.tweetTime);
-              tweetBody.innerHTML = element.tweet;
-              ///
-              var anchor = document.createElement("a");
-              anchor.setAttribute('href', '#');
-              anchor.addEventListener('click', function(){
-                getUserTweets(element.userName);
-              });
-              anchor.textContent = element.userName;
-              tweetUser.appendChild(anchor);
-              
-              ///
-              tweetTime.innerHTML = convertedTweetTime;
-              if (element.likeCount) {
-                likeCount.innerHTML = "<img src='./img/like.svg' onclick='postLike("+element.id+")'>" + element.likeCount;                
-              }else{
-                likeCount.innerHTML = "<img src='./img/default_like.svg' onclick='postLike("+element.id+")'>" + element.likeCount;                
-              }
-              
+              var tweetLike = row.insertCell(-1); //課題４
 
+              // 【追加】
+              let tmp = element.tweetTime;
+              let tweetTimeConvert = tmp.substr(0,4) + '/' + tmp.substr(5,2) + '/' + tmp.substr(8,2) + ' ' + tmp.substr(11,8);
+              //
+
+              // 【追加】
+              // tweetDate.innerHTML = element.tweetTime; //削除
+              tweetDate.innerHTML = tweetTimeConvert;
+              //tweetUser.innerHTML = element.userName;
+              var sTruserName = '"'+ element.userName + '"';
+              tweetUser.innerHTML = "<a href='#' onclick='getUserTweets("+sTruserName+")'>" + element.userName+ "</a>";
               
+              //
+              tweetBody.innerHTML = element.tweet;
+              //tweetLike.innerHTML = element.likeCount;  //課題４
+              if(element.likeCount > 0){
+                // いいねが1以上なら赤いハート
+                tweetLike.innerHTML = "<img src='./img/like.svg' onclick='postLike("+element.id+")'>" + element.likeCount; //課題５
+              }else{
+                // いいねが0なら黒いハート
+                tweetLike.innerHTML = "<img src='./img/default_like.svg' onclick='postLike("+element.id+")'>" + element.likeCount; //課題５
+              }
             });
           })
           .catch(function(error) {
@@ -115,66 +116,152 @@
             // always executed
           });
       };
-      function getUserTweets(userName){
-        const params = {user: userName};
-        axios.get('http://18.176.22.208:8080/timeline',{params:params})
-        .then(function(response){
-          console.log(response);
-          let table = document.getElementById('tweetTable');
-          table.innerHTML = "<tr><th>ツイート時刻</th><th>ユーザー</th><th>ツイート内容</th><th>いいね数</th></tr>";
-          response.data.forEach(element => {
+
+
+
+//*************** 追加　******************
+      function postLike(tweetid) {
+        const params = {
+          userName: userInfo.displayName,
+          tweetId: tweetid
+        };
+        axios
+          .post("http://18.176.22.208:8080/like", params)
+          .then(function(response) {
+            // handle success
+            console.log(response);
+            location.reload();  //リロード
+          })
+          .catch(function(error) {
+            // handle error
+            console.log(error);
+          })
+          .then(function() {
+            // always executed
+          });  
+      }
+
+      function getUserTweets(userName) {
+        const params = {
+          user: userName
+        };
+        axios
+          .get("http://18.176.22.208:8080/timeline", {params: params})
+          .then(function(response) {
+            // handle success
+            console.log(response);
+
+            // document.write(response.data);
+            var table = document.getElementById("tweetTable");
+            while( table.rows[ 1 ] ) table.deleteRow(1);
+            response.data.forEach(element => {
               console.log("element", element);
               var row = table.insertRow(-1);
-              var tweetTime = row.insertCell(-1);
+              // 【追加】
+              var tweetDate = row.insertCell(-1);
               var tweetUser = row.insertCell(-1);
+              //
               var tweetBody = row.insertCell(-1);
-              var likeCount = row.insertCell(-1);
-              //tmpTweetTimeに一旦格納する。
-              let tmpTweetTime = element.tweetTime;
-              //格納した値から"yyyy/MM/dd hh:mm:ss"形式に変換
-              let convertedTweetTime = tmpTweetTime.substr(0,4) + '/' + tmpTweetTime.substr(5,2) + '/' + tmpTweetTime.substr(8,2) + ' ' + tmpTweetTime.substr(11,8);
-              console.log(element.tweetTime);
+              var tweetLike = row.insertCell(-1); //課題４
+
+              // 【追加】
+              let tmp = element.tweetTime;
+              let tweetTimeConvert = tmp.substr(0,4) + '/' + tmp.substr(5,2) + '/' + tmp.substr(8,2) + ' ' + tmp.substr(11,8);
+              //
+
+              // 【追加】
+              // tweetDate.innerHTML = element.tweetTime; //削除
+              tweetDate.innerHTML = tweetTimeConvert;
+              //tweetUser.innerHTML = element.userName;
+              var sTruserName = '"'+ element.userName + '"';
+              tweetUser.innerHTML = "<a href='#' onclick='getUserTweets("+sTruserName+")'>" + element.userName+ "</a>";
+
+              //
               tweetBody.innerHTML = element.tweet;
-              ///
-              var anchor = document.createElement("a");
-              anchor.setAttribute('href', '#');
-              anchor.addEventListener('click', function(){
-                getUserTweets(element.userName);
-              });
-              anchor.textContent = element.userName;
-              tweetUser.appendChild(anchor);
-              
-              ///
-              tweetTime.innerHTML = convertedTweetTime;
-              if (element.likeCount) {
-                likeCount.innerHTML = "<img src='./img/like.svg' onclick='postLike("+element.id+")'>" + element.likeCount;                
+              //tweetLike.innerHTML = element.likeCount;  //課題４
+              if(element.likeCount > 0){
+                // いいねが1以上なら赤いハート
+                tweetLike.innerHTML = "<img src='./img/like.svg' onclick='postLike("+element.id+")'>" + element.likeCount; //課題５
               }else{
-                likeCount.innerHTML = "<img src='./img/default_like.svg' onclick='postLike("+element.id+")'>" + element.likeCount;                
+                // いいねが0なら黒いハート
+                tweetLike.innerHTML = "<img src='./img/default_like.svg' onclick='postLike("+element.id+")'>" + element.likeCount; //課題５
               }
-              
-
-              
             });
-
-        })
-        .catch(function(err){
-          console.log(err);
-        })
-        .then(function(){
-          //always executed
-        });
+          })
+          .catch(function(error) {
+            // handle error
+            console.log(error);
+          })
+          .then(function() {
+            // always executed
+          });
       }
-      function postTweet() {
+
+//*********************************
+    </script>
+    <style type="text/css">
+      .hide {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <table id="tweetTable">
+      <tr>
+        <!-- 追加　--> 
+        <th>ツイート時刻</th>
+        <th>ユーザー</th>
+        <!-- -->
+        <th>ツイート内容</th>
+        <th>いいね</th>
+      </tr>
+    </table>
+
+    <br />
+
+  <div id="app">
+    <form name="tweetForm">
+     
+      <textarea  v-model.trim="message"@keyup="activateSubmit" name="tweetBody" cols="100" rows="5" maxlength="140" placeholder="入力してください" ></textarea>
+      <p>現在 {{message.length}}/140 文字です。</p>
+    
+      <input type="submit" value="送信" :disabled="!activateSubmit" @click="postTweet()" />
+    </form>
+    </div>
+    <p id="loginStatus"></p>
+    <button id="logout" class="hide">ログアウト</button>
+ 
+  </body> 
+  <script>
+    new Vue({
+      el: "#app",
+      data: { message: "" },
+      computed: {
+        activateSubmit () {
+          if(this.message != 0){
+            return true
+          }else{
+            return false
+          }
+        }
+      },
+
+      methods: {
+        postTweet: function() {
         //入力ボックスの内容を表示する
         const now = new Date();
-        now.setHours(now.getHours() + 9);
-        //console.log(now);
+        // 追加
+        now.setHours(now.getHours()-now.getTimezoneOffset()/60);
+        //
         const params = {
-          tweet: document.tweetForm.tweetBody.value,
+          tweet: this.message,
+          // 【追加】
           userName: userInfo.displayName,
           tweetTime: now
+          //
         };
-        
+
         axios
           .post("http://18.176.22.208:8080/tweet", params)
           .then(function(response) {
@@ -189,64 +276,14 @@
             // always executed
           });
       }
-      function postLike(tweetId) {
-        const params = {
-          userName: userInfo.displayName,
-          tweetId: tweetId
-        };
-        typeof(params);
-        axios
-          .post("http://18.176.22.208:8080/like", params)
-          .then(function(response) {
-            // handle success
-            console.log(response);
-          })
-          .catch(function(error) {
-            // handle error
-            console.log(error);
-          })
-          .then(function() {
-            // always executed
-          });
-          location.reload();
+
       }
-    </script>
-    <style type="text/css">
-      .hide {
-        display: none;
-      }
-    </style>
-  </head>
 
-  <body>
+    });
+  </script>
 
 
-<!--a href="http://18.176.22.208/index.html">ホーム</a-->
-<div id="home">
-<a href="./index.html"><img src="./img/ecalbt009_011.png" ></a>
-</div>
 
-    <table id="tweetTable">
-      <tr>
-        <th>ツイート時刻</th>
-        <th>ユーザー</th>
-        <th>ツイート内容</th>
-        <th>いいね数</th>
-      </tr>
-    </table>
 
-    <br />
-
-    <form name="tweetForm">
-      <textarea name="tweetBody" cols="100" rows="5"></textarea>
-      <div>
-        <input type="submit" value="送信" onclick="postTweet()" />
-      </div>
-    </form>
-
-    <p id="loginStatus"></p>
-
-    <button id="logout" class="hide">ログアウト</button>
-    
   </body>
 </html>
